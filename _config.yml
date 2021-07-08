@@ -1,4 +1,4 @@
-site: Gesko
+site: 
 title: Gesko
 description: >-
   just a minimalist, personal blog
@@ -17,7 +17,7 @@ author:
   email: your-email@email.com # email adress
 
 # URL settings
-url: "https://powex.ml" #
+url: "https://shahrid9"2.github.io #
 baseurl:  # leave blank if not wishd
 permalink: "https://powex.ml/Gesko/"
 permalink: pretty 
