@@ -1,0 +1,529 @@
+<html>
+
+<head>
+    <script src="https://cdn.plot.ly/plotly-3.0.1.min.js" charset="utf-8"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/dark.css">
+    <style>
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            /* 3 equal columns */
+            gap: 20px;
+            /* space between items */
+            padding: 20px;
+        }
+
+        .item {
+            padding: 30px;
+            text-align: center;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        table {
+            border-collapse: separate;
+            border-spacing: 0 10px;
+            /* space between rows */
+            width: 100%;
+            border: 1px solid #e0e0e0;
+        }
+
+        th,
+        td {
+            text-align: center;
+            padding: 12px 16px;
+            /* spacing inside cells */
+            /* border: 1px solid #e0e0e0; */
+            width: auto;
+        }
+
+        table input {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        table select {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        th {
+
+            font-weight: bold;
+        }
+
+        #tester {
+            text-align: center;
+            width: auto;
+            height: 300px;
+        }
+
+        .hide{
+            display:none
+        }
+
+        .tooltip-container {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+            }
+
+            .tooltip-icon {
+            font-weight: bold;
+            font-size: 16px;
+            color: #007bff;
+            border-bottom: 1px dotted #007bff;
+            }
+
+            .tooltip-text {
+            visibility: hidden;
+            width: 340px;
+            background-color: #fcf8e3;
+            color: #333;
+            text-align: left;
+            border: 1px solid #f0ad4e;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 100;
+            bottom: 125%; /* position above */
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 13px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            }
+
+            .tooltip-container:hover .tooltip-text {
+            visibility: visible;
+            }
+    </style>
+</head>
+
+<body>
+
+    <h1>TPS Calculator</h1>
+    <div>
+        <div>
+            <div id="tester"></div>
+        </div>
+        <div>
+            <h3>Summary</h3>
+
+            <div style="display: flex;">
+                <div style="flex: 1; padding: 10px;">
+                    <p>Target concurrent user : <input id="targetUsers" value="1" /></p>
+                </div>
+                <div style="flex: 1; padding: 10px;">
+                    <p>Duration of test execution: <input id="testDuration" value="1800" /></p>
+                </div>
+            </div>
+
+            <div style="margin-top: 1em; padding: 1em; border: 1px solid #ffffff;  color: #ffffff; border-radius: 5px; font-size: 15px;">
+                <p class="hide">No. of Think Time : <label id="ttCount">0</label></p>
+                <p class="hide">Number of Steps : <label id="rowCount">0</label></p>
+                <p class="hide">Total Think Time : <label id="totaltt">0</label></p>
+                <p>End-to-End Response Time Per Transaction: <label id="totalrs">0</label> Seconds</p>
+                <p>Estimated duration per transaction: <label id="duration">0</label> Seconds</p>
+                <p>Estimated Each user can complete <label id="transactionPerUser">0</label> full transactions in 30 minutes
+                </p>
+                <p>Estimated Total Transaction in 30 minutes is <label id="totalTranscations">0</label></p>
+                <p>Estimated TPS : <label id="tps">0</label></p>
+                <p>Estimated TPM : <label id="tpm">0</label></p>
+            </div>
+        </div>
+        <div>
+            <table id="scenariosTable">
+                <thead>
+                    <tr>
+                        <th style="width: 10px;">#</th>
+                        <th>Steps</th>
+                        <th>Parameter</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                </tbody>
+            </table>
+        </div>
+        <button onclick="addRow(this)">ADD</button>
+
+        <div style="margin-top: 1em; padding: 1em; border: 1px solid #f0ad4e;  color: #8a6d3b; border-radius: 5px; font-size: 15px;">
+            <strong>⚠️ Disclaimer:</strong><br>
+            This calculator uses <strong>Little’s Law</strong> (L = λ × W) to estimate performance metrics. While helpful, it assumes a system in <strong>steady-state</strong> with constant arrival and completion rates.<br><br>
+            In real-world scenarios, these conditions may not apply due to:
+            <ul style="margin-top: 0.5em; padding-left: 1.5em;">
+                <li>Ramp-up/down during test runs</li>
+                <li>Think time, pacing, and user behavior variability</li>
+                <li>Queuing, contention, and resource bottlenecks</li>
+                <li>Non-linear scaling under high load</li>
+                <li><div class="tooltip-container">
+                    <span class="tooltip-icon">More...</span>
+                    <div class="tooltip-text">
+                        Little’s Law Limitations:
+                        <ul style="margin: 0.5em 0 0 1em; padding: 0;">
+                        <li>Queuing, contention, and resource bottlenecks</li>
+                        <li>Test ramp-up and ramp-down periods</li>
+                        <li>Think time and pacing between user actions</li>
+                        <li>Garbage collection or background CPU spikes</li>
+                        <li>Network latency or jitter</li>
+                        <li>Third-party API delays</li>
+                        <li>Concurrency limits (e.g., DB or thread pools)</li>
+                        <li>Caching behavior (cold vs warm cache)</li>
+                        <li>Autoscaling delays in cloud infrastructure</li>
+                        <li>Retries or failed/slow transactions</li>
+                        <li>Load balancer uneven distribution</li>
+                        <li>Differences between virtual and real users</li>
+                        </ul>
+                    </div>
+            </div></li>
+            </ul>
+            Always validate results with real performance testing and monitoring tools.
+            
+        </div>
+
+
+
+    </div>
+</body>
+<script>
+
+
+
+    let counter = 0;
+    let ttCounter = 0;
+
+    let tt_arr = [];
+    let tt_arr2 = [];
+    let resp_times_arr = [];
+
+    let totaltt = 0;
+    let totalrs = 0;
+    let totalpace = 0;
+
+    let total = 0;
+    let globalTotal = 0;
+    
+    sample([0],[0])
+    addRow();
+
+    function sample(x,y) {
+    
+        TESTER = document.getElementById('tester');
+
+        let trace = {
+            x: x, 
+            y: y, 
+            type: 'scatter',
+            mode: 'lines',
+            name: 'Transactions',
+            hovertemplate: '%{x}th Minute, %{y:,} Transactions<extra></extra>',
+        };
+
+        let layout = {
+            title: 'Transactions Over Time',
+            xaxis: { title: {
+                text: 'Test Duration',
+                font: { size: 15 }
+            }},
+            yaxis: { title: {
+                text: 'Number of Transactions',
+                font: { size: 15 }
+            }},
+            margin: {
+                l: 60,
+                r: 25,
+                b: 60,
+                t: 30,
+                pad: 4
+            },
+            annotations: [
+                {
+                    x: x[x.length - 1],                 
+                    y: y[y.length - 1],                 
+                    text: `Total Transactions: ${y[y.length - 1].toLocaleString()}`,
+                    showarrow: true,
+                    arrowhead: 5,
+                    ax: 0,
+                    ay: -40,
+                    bgcolor: '#fff',
+                    bordercolor: '#ccc',
+                    borderwidth: 1
+                }
+            ],
+            showlegend: false
+        };
+
+        Plotly.newPlot(TESTER, [trace], layout);
+
+        document.getElementById("ttCount").textContent = ttCounter;
+
+    }
+
+    function populateSelection(index) {
+
+        let resp = resp_times_arr.some(obj => "selection" + index in obj);
+
+        if (!resp) {
+            resp_times_arr.push({
+                title: "selection" + index,
+                value: document.getElementById('selectionInput' + index).value,
+                index: index
+            })
+        }
+
+
+        const select = document.getElementById("selection" + index);
+
+
+        arr = [
+            {
+                title: "Think Time",
+                value: "Think Time"
+            },
+            {
+                title: "Pacing",
+                value: "Pacing"
+            }
+        ]
+
+
+        arr.forEach(e => {
+            const option = document.createElement("option");
+            option.value = e.value;
+            option.text = e.title;
+            select.appendChild(option);
+        });
+
+
+
+        select.addEventListener("change", e => {
+            let selIndex = "selection" + index
+
+
+
+            if (e.srcElement.value == 'Response Times') {
+                document.getElementById("selectionInput" + index).value = 0;
+                let res = tt_arr2.filter(e => e.index !== index);
+                document.getElementById("ttCount").textContent = res.length;
+                tt_arr2 = res;
+
+                let exists = resp_times_arr.some(obj => selIndex in obj);
+                if (!exists) {
+                    resp_times_arr.push({
+                        title: selIndex,
+                        value: document.getElementById('selectionInput' + index).value,
+                        index: index
+                    })
+                }
+
+                document.getElementById("rowCount").textContent = resp_times_arr.length;
+
+            }
+
+            if (e.srcElement.value == "Think Time") {
+
+                document.getElementById("selectionInput" + index).value = 0;
+
+                let exists = tt_arr2.some(obj => selIndex in obj);
+                if (!exists) {
+                    tt_arr2.push({
+                        title: selIndex,
+                        value: document.getElementById('selectionInput' + index).value,
+                        index: index
+                    })
+                }
+
+                resp_times_arr = resp_times_arr.filter(e => e.index !== index);
+                document.getElementById("ttCount").textContent = tt_arr2.length;
+                document.getElementById("rowCount").textContent = resp_times_arr.length;
+
+                delete resp_times_arr[selIndex]
+                getAllTotal();
+
+            }
+
+            if (e.srcElement.value == "Pacing") {
+                document.getElementById("selectionInput" + index).value = 0;
+                let res = tt_arr2.filter(e => e.index !== index);
+
+                document.getElementById("ttCount").textContent = res.length;
+                tt_arr2 = res;
+                resp_times_arr = resp_times_arr.filter(e => e.index !== index);
+                document.getElementById("rowCount").textContent = resp_times_arr.length;
+                delete resp_times_arr[selIndex]
+                getAllTotal();
+
+
+
+            }
+
+        })
+
+
+    }
+
+    function addRow(button) {
+        var table = document.getElementById("scenariosTable").getElementsByTagName('tbody')[0];
+        var row = table.insertRow();
+        const rowIndex = counter++;
+        row.innerHTML = `
+                <td>${counter}</td>
+                <td><textarea placeholder="Enter steps here"></textarea></td>
+                <td><select id="selection${rowIndex}">
+                    <option value="Response Times">Response Times</option>
+                </select>
+                <input id="selectionInput${rowIndex}" value="0"/>
+                </td>
+                <td> <button onclick="deleteRow(this,${rowIndex})">X</button></td>
+            `;
+
+        updateRowCount()
+        populateSelection(rowIndex);
+        selectionInputValue(rowIndex);
+
+    }
+
+    function selectionInputValue(rowIndex) {
+        const selIndex = "selectionInput" + rowIndex
+        const selectIndex = "selection" + rowIndex
+
+        document.getElementById(selIndex).addEventListener("input", function () {
+
+            const selectValue = document.getElementById(selectIndex).value
+
+
+            if (selectValue == "Response Times") {
+
+                let res = resp_times_arr.some(obj => obj.title == selectIndex);
+                if (res) {
+                    let respCount = 0
+                    resp_times_arr.forEach(e => {
+
+                        if (e.index == rowIndex) {
+                            resp_times_arr[respCount].value = this.value;
+                        }
+                        respCount++;
+                    })
+                }
+
+            }
+
+            if (selectValue == "Think Time") {
+
+                let res = tt_arr2.some(obj => obj.title == selectIndex);
+
+                if (res) {
+                    let ttCount = 0
+                    tt_arr2.forEach(e => {
+                    
+
+                        if (e.index == rowIndex) {
+                            tt_arr2[ttCount].value = this.value;
+
+                        }
+                        ttCount++;
+                    })
+                }
+
+
+
+
+            }
+
+            getAllTotal();
+
+        });
+    }
+
+    document.getElementById("testDuration").addEventListener("input", function () {
+        getAllTotal();
+    });
+
+    document.getElementById("targetUsers").addEventListener("input", function () {
+        getAllTotal();
+    });
+
+    function getAllTotal() {
+        totaltt = tt_arr2.reduce((sum, item) => sum + parseInt(item.value), 0);
+        document.getElementById("totaltt").textContent = totaltt;
+        totalrs = resp_times_arr.reduce((sum, item) => sum + parseInt(item.value), 0);
+        document.getElementById("totalrs").textContent = totalrs;
+        let total = totalrs + totaltt;
+        document.getElementById("duration").textContent = total;
+
+        let testDuration = document.getElementById("testDuration").value;
+        let targetUsers = document.getElementById("targetUsers").value;
+
+        let transactionPerUser = (testDuration / total)
+
+        document.getElementById("transactionPerUser").textContent = formatNumber(transactionPerUser)
+
+        let totalTransactions = targetUsers * transactionPerUser
+
+        document.getElementById("totalTranscations").textContent = formatNumber(totalTransactions)
+
+        let estTPS = formatNumber(totalTransactions / testDuration)
+
+        document.getElementById("tps").textContent = estTPS
+
+        
+        let totalTransactionPerMinutes = (60 / total);
+
+        console.log("duration per transcation :"+total)
+
+        let totalTransactionPerMinutes2 = formatNumber(targetUsers * totalTransactionPerMinutes)
+
+        document.getElementById("tpm").textContent = totalTransactionPerMinutes
+
+        let x_arr = [];
+        let y_arr = [];
+
+       let accumulated = 0;
+       for (let i = 1; i <= 30; i++) {
+            x_arr.push(i); 
+            accumulated += totalTransactionPerMinutes2;
+            y_arr.push(accumulated); 
+       }
+
+        console.log(y_arr)
+       
+        sample(x_arr,y_arr); 
+    }
+
+    function deleteRow(button, index) {
+
+        let selIndex = "selection" + index
+        resp_times_arr = resp_times_arr.filter(e => e.index !== index);
+        const select = document.getElementById(selIndex);
+
+        if (select.value == "Think Time") {
+            delete tt_arr2[selIndex]
+            document.getElementById("ttCount").textContent = tt_arr2.length;
+
+        }
+
+        counter--
+        document.getElementById("rowCount").textContent = counter;
+        const row = button.closest('tr');
+        delete resp_times_arr[selIndex]
+        getAllTotal();
+        row.remove();
+    }
+
+    function updateRowCount() {
+        document.getElementById("rowCount").textContent = counter;
+    }
+
+    function formatNumber(num) {
+        return parseFloat(num.toFixed(2));
+    }
+
+    
+    
+
+
+
+</script>
+
+</html>
