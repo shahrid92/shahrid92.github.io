@@ -4,21 +4,21 @@ description: >-
   just a minimalist, personal blog
 googlewebfonts: Fira+Code:wght@400;500;700
 lang: en-US
-timezone: Rome
+timezone: Asia/Kuala_Lumpur
 repo: https://github.com/p0wex/Gesko # site repo [optional]
 data-theme: dark # default theme "dark" | "light"
 
 author:
-  name: p0wex
+  name: Shah Ridzuan
   bio: just a minimalist, personal blog
-  username: p0wex # general username
-  github: p0wex # github username
-  twitter: P0Wex # twitter username
-  email: your-email@email.com # email adress
+  username: shahrid92 # general username
+  github: shahrid92 # github username
+  email: shahridzuan.aws@gmail.com # email adress
 
 # URL settings
-url: "https://shahrid92.github.io" 
+url: "https://shahrid92.github.io"
 baseurl: "https://shahrid92.github.io"
+baseurl: ""
 permalink: "https://powex.ml/Gesko/"
 permalink: pretty 
 
